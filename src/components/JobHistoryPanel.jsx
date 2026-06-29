@@ -4,7 +4,7 @@ import { RotateCcw } from 'lucide-react';
 import BackJobModal from './BackJobModal.jsx';
 
 function HistoryCard({ job }) {
-  const { technicians } = useApp();
+  const { technicians, canManageData } = useApp();
   const [showBackJob, setShowBackJob] = useState(false);
 
   const techNames = (job.technicianIds || [])
@@ -35,15 +35,17 @@ function HistoryCard({ job }) {
         </p>
       </div>
 
-      <button
-        onClick={() => setShowBackJob(true)}
-        className="shrink-0 flex items-center gap-1.5 border border-red-200 text-red-400 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-      >
-        <RotateCcw className="h-3 w-3" />
-        Create Back-Job
-      </button>
+      {canManageData && (
+        <button
+          onClick={() => setShowBackJob(true)}
+          className="shrink-0 flex items-center gap-1.5 border border-red-200 text-red-400 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+        >
+          <RotateCcw className="h-3 w-3" />
+          Create Back-Job
+        </button>
+      )}
 
-      {showBackJob && (
+      {canManageData && showBackJob && (
         <BackJobModal isOpen historyJob={job} onClose={() => setShowBackJob(false)} />
       )}
     </div>

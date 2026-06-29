@@ -11,7 +11,7 @@ import AddTechnicianModal from './components/AddTechnicianModal.jsx';
 import CreateJobModal from './components/CreateJobModal.jsx';
 
 function AppContent() {
-  const { user, loading } = useApp();
+  const { user, loading, canManageData } = useApp();
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [showAddTech, setShowAddTech] = useState(false);
   const [showCreateJob, setShowCreateJob] = useState(false);
@@ -31,8 +31,8 @@ function AppContent() {
         onPrev={() => shiftDate(-1)}
         onNext={() => shiftDate(1)}
         onToday={() => setCalendarDate(new Date())}
-        onAddTech={() => setShowAddTech(true)}
-        onCreateJob={() => setShowCreateJob(true)}
+        onAddTech={() => canManageData && setShowAddTech(true)}
+        onCreateJob={() => canManageData && setShowCreateJob(true)}
       />
 
       {loading ? (
@@ -46,19 +46,23 @@ function AppContent() {
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
             <div className="lg:col-span-2 space-y-4">
-              <TechPerformancePanel onAddTech={() => setShowAddTech(true)} />
+              <TechPerformancePanel onAddTech={() => canManageData && setShowAddTech(true)} />
               <AuditLog />
             </div>
             <div className="lg:col-span-3 space-y-4">
-              <DispatchQueue onCreateJob={() => setShowCreateJob(true)} />
+              <DispatchQueue onCreateJob={() => canManageData && setShowCreateJob(true)} />
               <JobHistoryPanel />
             </div>
           </div>
         </div>
       )}
 
-      <AddTechnicianModal isOpen={showAddTech} onClose={() => setShowAddTech(false)} />
-      <CreateJobModal isOpen={showCreateJob} onClose={() => setShowCreateJob(false)} />
+      {canManageData && (
+        <AddTechnicianModal isOpen={showAddTech} onClose={() => setShowAddTech(false)} />
+      )}
+      {canManageData && (
+        <CreateJobModal isOpen={showCreateJob} onClose={() => setShowCreateJob(false)} />
+      )}
     </div>
   );
 }

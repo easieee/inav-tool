@@ -8,7 +8,7 @@ const AVATAR_COLORS = [
 ];
 
 export default function TechPerformancePanel({ onAddTech }) {
-  const { technicians, jobHistory } = useApp();
+  const { technicians, jobHistory, canManageData } = useApp();
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -16,18 +16,22 @@ export default function TechPerformancePanel({ onAddTech }) {
         <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
           Technician Performance
         </span>
-        <button
-          onClick={onAddTech}
-          className="flex items-center gap-1 text-blue-500 hover:text-blue-600 text-xs font-semibold transition-colors"
-        >
-          <UserPlus className="h-3.5 w-3.5" />
-          + Add Tech
-        </button>
+        {canManageData && (
+          <button
+            onClick={onAddTech}
+            className="flex items-center gap-1 text-blue-500 hover:text-blue-600 text-xs font-semibold transition-colors"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            + Add Tech
+          </button>
+        )}
       </div>
 
       {technicians.length === 0 ? (
         <p className="px-5 py-8 text-slate-400 text-sm text-center">
-          No technicians yet. Click "+ Add Tech" to get started.
+          {canManageData
+            ? 'No technicians yet. Click "+ Add Tech" to get started.'
+            : 'No technicians available yet.'}
         </p>
       ) : (
         <div className="divide-y divide-slate-50">

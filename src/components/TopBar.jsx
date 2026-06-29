@@ -27,7 +27,7 @@ function getDateLabel(date) {
 }
 
 export default function TopBar({ calendarDate, onPrev, onNext, onToday, onAddTech, onCreateJob }) {
-  const { user, technicians, jobOrders, login, logout } = useApp();
+  const { user, technicians, jobOrders, login, logout, canManageData } = useApp();
 
   const handleLogin = useGoogleLogin({
     scope: 'openid profile email https://www.googleapis.com/auth/spreadsheets',
@@ -90,6 +90,7 @@ export default function TopBar({ calendarDate, onPrev, onNext, onToday, onAddTec
             title="Previous day"
           >
             <ChevronLeft className="h-4 w-4" />
+       w-4" />
           </button>
 
           {/* Date label — click to jump back to today */}
@@ -118,21 +119,25 @@ export default function TopBar({ calendarDate, onPrev, onNext, onToday, onAddTec
         <div className="w-px h-5 bg-slate-200 mx-1" />
 
         {/* Actions */}
-        <button
-          onClick={onAddTech}
-          className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors font-medium"
-        >
-          <UserPlus className="h-3.5 w-3.5" />
-          + Add Tech
-        </button>
+        {canManageData ? (
+          <>
+            <button
+              onClick={onAddTech}
+              className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors font-medium"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              + Add Tech
+            </button>
 
-        <button
-          onClick={onCreateJob}
-          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-blue-100"
-        >
-          <Plus className="h-4 w-4" />
-          Create Job Order
-        </button>
+            <button
+              onClick={onCreateJob}
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-blue-100"
+            >
+              <Plus className="h-4 w-4" />
+              Create Job Order
+            </button>
+          </>
+        ) : null}
 
         <div className="w-px h-5 bg-slate-200 mx-1" />
 

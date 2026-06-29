@@ -6,7 +6,7 @@ import EditJobModal from './EditJobModal.jsx';
 import DeleteConfirmModal from './DeleteConfirmModal.jsx';
 
 function JobRow({ job }) {
-  const { technicians, markJobDone, deleteJobOrder } = useApp();
+  const { technicians, markJobDone, deleteJobOrder, canManageData } = useApp();
   const [showEdit,   setShowEdit]   = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [marking,   setMarking]   = useState(false);
@@ -51,33 +51,35 @@ function JobRow({ job }) {
       </div>
 
       {/* Actions */}
-      <div className="shrink-0 flex items-center gap-2">
-        <button
-          onClick={() => setShowEdit(true)}
-          className="text-xs text-blue-500 hover:text-blue-700 font-semibold transition-colors"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => setShowDelete(true)}
-          className="text-xs text-red-400 hover:text-red-600 font-semibold transition-colors"
-        >
-          Delete
-        </button>
-        <button
-          onClick={handleMarkDone}
-          disabled={marking}
-          className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm"
-        >
-          <CheckCircle2 className="h-3.5 w-3.5" />
-          {marking ? '…' : 'Mark Done'}
-        </button>
-      </div>
+      {canManageData && (
+        <div className="shrink-0 flex items-center gap-2">
+          <button
+            onClick={() => setShowEdit(true)}
+            className="text-xs text-blue-500 hover:text-blue-700 font-semibold transition-colors"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => setShowDelete(true)}
+            className="text-xs text-red-400 hover:text-red-600 font-semibold transition-colors"
+          >
+            Delete
+          </button>
+          <button
+            onClick={handleMarkDone}
+            disabled={marking}
+            className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {marking ? '…' : 'Mark Done'}
+          </button>
+        </div>
+      )}
 
-      {showEdit && (
+      {canManageData && showEdit && (
         <EditJobModal isOpen job={job} onClose={() => setShowEdit(false)} />
       )}
-      {showDelete && (
+      {canManageData && showDelete && (
         <DeleteConfirmModal
           isOpen
           title="Delete Job Order"
@@ -91,7 +93,7 @@ function JobRow({ job }) {
 }
 
 export default function DispatchQueue({ onCreateJob }) {
-  const { jobOrders } = useApp();
+  const { jobOrders, canManageData } = useApp();
   const today = format(new Date(), 'yyyy-MM-dd');
   const todayCount = jobOrders.filter(j => j.date === today).length;
 
@@ -111,13 +113,15 @@ export default function DispatchQueue({ onCreateJob }) {
       {jobOrders.length === 0 ? (
         <div className="py-10 text-center">
           <p className="text-slate-400 text-sm mb-3">No active job orders.</p>
-          <button
-            onClick={onCreateJob}
-            className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Create Job Order
-          </button>
+          {canManageData && (
+            <button
+              onClick={onCreateJob}
+              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Create Job Order
+            </button>
+          )}
         </div>
       ) : (
         <div className="max-h-96 overflow-y-auto">

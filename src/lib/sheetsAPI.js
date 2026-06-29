@@ -37,10 +37,63 @@ async function apiFetch(url, options = {}, token) {
   return data;
 }
 
-function rowToObject(row, sheetName) {
+function parseGvizPayload(text) {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error('Invalid Google Sheets public response');
+  }
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+function gvizTableToRows(table) {
+  const headers = (table.cols || []).map(col => String(col.label || col.id || '').trim());
+  const rows = (table.rows || []).map(r =>
+    (r.c || []).map(cell => {
+      if (!cell) return '';
+      if (cell.f !== undefined && cell.f !== null) return String(cell.f);
+      if (cell.v !== undefined && cell.v !== null) return String(cell.v);
+      return '';
+    })
+  );
+  return [headers, ...rows];
+}
+
+async function fetchPublicSheetValues(spreadsheetId, sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=out:json`;
+  const res = await fetch(url);
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`Public sheet read failed (${res.status})`);
+  }
+  const payload = parseGvizPayload(text);
+  if (payload.status !== 'ok' || !payload.table) {
+    const detail = payload.errors?.[0]?.detailed_message || payload.errors?.[0]?.message || 'Unknown error';
+    throw new Error(`Public sheet read failed: ${detail}`);
+  }
+  return gvizTableToRows(payload.table);
+}
+
+function getHeaderIndexMap(headerRow = [], sheetName) {
+  const normalized = headerRow.map(h => String(h || '').trim());
+  const expected = SHEET_HEADERS[sheetName] || [];
+  const map = {};
+
+  expected.forEach((field, idx) => {
+    const found = normalized.indexOf(field);
+    map[field] = found >= 0 ? found : idx;
+  });
+
+  return map;
+}
+
+function rowToObject(row, sheetName, headerIndexMap = null) {
   const headers = SHEET_HEADERS[sheetName];
   const obj = {};
-  headers.forEach((h, i) => { obj[h] = row[i] ?? ''; });
+  headers.forEach((h, i) => {
+    const col = headerIndexMap ? headerIndexMap[h] : i;
+    obj[h] = row[col] ?? '';
+  });
 
   // Parse arrays stored as pipe-separated strings
   if (obj.technicianIds !== undefined) {
@@ -67,19 +120,26 @@ function objectToRow(obj, sheetName) {
 /** Read all non-empty rows from a sheet, returns array of objects */
 export async function getAllRows(spreadsheetId, sheetName, token) {
   try {
-    const data = await apiFetch(
-      `${BASE}/${spreadsheetId}/values/${sheetName}`,
-      {},
-      token
-    );
-    const values = data.values || [];
+    const values = token
+      ? (await apiFetch(
+          `${BASE}/${spreadsheetId}/values/${sheetName}`,
+          {},
+          token
+        )).values || []
+      : await fetchPublicSheetValues(spreadsheetId, sheetName);
     if (values.length === 0) return [];
+
+    const headerIndexMap = getHeaderIndexMap(values[0], sheetName);
+    const idCol = headerIndexMap.id ?? 0;
 
     // Skip header row (row[0]) and empty rows
     return values
       .slice(1)
-      .filter(row => row && row[0])
-      .map(row => rowToObject(row, sheetName));
+      .filter(row => {
+        if (!row || !row[idCol]) return false;
+        return String(row[idCol]).trim().toLowerCase() !== 'id';
+      })
+      .map(row => rowToObject(row, sheetName, headerIndexMap));
   } catch (err) {
     console.error(`getAllRows(${sheetName}):`, err.message);
     return [];
@@ -104,13 +164,15 @@ export async function updateRowById(spreadsheetId, sheetName, id, updates, token
     token
   );
   const values = data.values || [];
+  const headerIndexMap = getHeaderIndexMap(values[0], sheetName);
+  const idCol = headerIndexMap.id ?? 0;
 
   // rowIndex in the values array (0 = header, 1+ = data)
-  const rowIndex = values.findIndex((row, i) => i > 0 && row[0] === id);
+  const rowIndex = values.findIndex((row, i) => i > 0 && row[idCol] === id);
   if (rowIndex === -1) throw new Error(`Row id=${id} not found in ${sheetName}`);
 
   // Build the current object, then merge updates
-  const current = rowToObject(values[rowIndex], sheetName);
+  const current = rowToObject(values[rowIndex], sheetName, headerIndexMap);
   const merged = { ...current, ...updates };
   const newRow = objectToRow(merged, sheetName);
 
@@ -130,7 +192,9 @@ export async function deleteRowById(spreadsheetId, sheetName, id, token) {
     token
   );
   const values = data.values || [];
-  const rowIndex = values.findIndex((row, i) => i > 0 && row[0] === id);
+  const headerIndexMap = getHeaderIndexMap(values[0], sheetName);
+  const idCol = headerIndexMap.id ?? 0;
+  const rowIndex = values.findIndex((row, i) => i > 0 && row[idCol] === id);
   if (rowIndex === -1) throw new Error(`Row id=${id} not found in ${sheetName}`);
 
   const sheetRowNum = rowIndex + 1;
@@ -147,6 +211,8 @@ export async function deleteRowById(spreadsheetId, sheetName, id, token) {
  * Creates missing tabs automatically — safe to call on every load.
  */
 export async function initializeSheets(spreadsheetId, token) {
+  if (!token) return;
+
   // 1. Fetch spreadsheet metadata to see which tabs already exist
   const meta = await apiFetch(
     `${BASE}/${spreadsheetId}?fields=sheets(properties(title))`,

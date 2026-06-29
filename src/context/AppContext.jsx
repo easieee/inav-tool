@@ -34,15 +34,21 @@ export function AppProvider({ children }) {
   }, []);
 
   const spreadsheetId = import.meta.env.VITE_SPREADSHEET_ID;
+  const readOnlyMode = String(import.meta.env.VITE_READ_ONLY_MODE ?? 'false').toLowerCase() === 'true';
+  const publicReadMode = String(import.meta.env.VITE_PUBLIC_READ_MODE ?? 'true').toLowerCase() === 'true';
+  const canManageData = !!user && !readOnlyMode;
   const SESSION_KEY = 'techscheduler_session';
 
   /* ─────────────────────────────── DATA LOAD ─────────────────────────────── */
 
   const loadData = useCallback(async (token) => {
-    if (!token || !spreadsheetId) return;
+    if (!spreadsheetId) return;
+    if (!token && !publicReadMode) return;
     setLoading(true);
     try {
-      await initializeSheets(spreadsheetId, token);
+      if (token) {
+        await initializeSheets(spreadsheetId, token);
+      }
       const [techs, orders, history] = await Promise.all([
         getAllRows(spreadsheetId, 'Technicians', token),
         getAllRows(spreadsheetId, 'JobOrders', token),
@@ -52,11 +58,26 @@ export function AppProvider({ children }) {
       setJobOrders(orders);
       setJobHistory(history);
     } catch (err) {
+      if (token && publicReadMode) {
+        try {
+          const [techs, orders, history] = await Promise.all([
+            getAllRows(spreadsheetId, 'Technicians', undefined),
+            getAllRows(spreadsheetId, 'JobOrders', undefined),
+            getAllRows(spreadsheetId, 'JobHistory', undefined)
+          ]);
+          setTechnicians(techs);
+          setJobOrders(orders);
+          setJobHistory(history);
+          return;
+        } catch {
+          // Fall through to error toast below.
+        }
+      }
       toast.error('Failed to load data: ' + err.message);
     } finally {
       setLoading(false);
     }
-  }, [spreadsheetId]);
+  }, [spreadsheetId, publicReadMode]);
 
   /* ─────────────────────────────── AUTH ──────────────────────────────────── */
 
@@ -75,24 +96,46 @@ export function AppProvider({ children }) {
     setJobOrders([]);
     setJobHistory([]);
     setAuditLogs([]);
-  }, [SESSION_KEY]);
+    if (publicReadMode) {
+      loadData(undefined).catch(() => {});
+    }
+  }, [SESSION_KEY, publicReadMode, loadData]);
 
   // Restore session on page refresh
   useEffect(() => {
     try {
       const saved = localStorage.getItem(SESSION_KEY);
-      if (!saved) return;
+      if (!saved) {
+        if (publicReadMode) {
+          loadData(undefined);
+        }
+        return;
+      }
       const savedUser = JSON.parse(saved);
-      if (!savedUser?.accessToken) return;
+      if (!savedUser?.accessToken) {
+        if (publicReadMode) {
+          loadData(undefined);
+        }
+        return;
+      }
       setUser(savedUser);
       loadData(savedUser.accessToken).catch(() => {
         // Token expired or revoked — clear stored session
         try { localStorage.removeItem(SESSION_KEY); } catch {}
         setUser(null);
-        toast('Session expired — please sign in again.', { icon: '🔑' });
+        if (publicReadMode) {
+          loadData(undefined).catch(() => {
+            toast('Session expired and public sheet read failed.', { icon: '⚠️' });
+          });
+        } else {
+          toast('Session expired — please sign in again.', { icon: '🔑' });
+        }
       });
     } catch {
       try { localStorage.removeItem(SESSION_KEY); } catch {}
+      if (publicReadMode) {
+        loadData(undefined).catch(() => {});
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentionally once on mount
@@ -101,6 +144,10 @@ export function AppProvider({ children }) {
 
   const addTechnician = useCallback(async (data) => {
     if (!user) return;
+    if (!canManageData) {
+      toast.error('Read-only mode: adding technicians is disabled.');
+      return;
+    }
     const tech = {
       id: generateId(),
       name: data.name,
@@ -117,7 +164,7 @@ export function AppProvider({ children }) {
     } catch (err) {
       toast.error('Failed to add technician: ' + err.message);
     }
-  }, [user, spreadsheetId, loadData, addLog]);
+  }, [user, canManageData, spreadsheetId, loadData, addLog]);
 
   const updateTechnician = useCallback(async (id, data) => {
     if (!user) return;
@@ -142,6 +189,10 @@ export function AppProvider({ children }) {
 
   const addJobOrder = useCallback(async (data) => {
     if (!user) return;
+    if (!canManageData) {
+      toast.error('Read-only mode: creating job orders is disabled.');
+      return;
+    }
     const job = {
       id: generateId(),
       title: data.title,
@@ -168,7 +219,7 @@ export function AppProvider({ children }) {
     } catch (err) {
       toast.error('Failed to create job: ' + err.message);
     }
-  }, [user, spreadsheetId, loadData, addLog]);
+  }, [user, canManageData, spreadsheetId, loadData, addLog]);
 
   const updateJobOrder = useCallback(async (id, data) => {
     if (!user) return;
@@ -281,6 +332,9 @@ export function AppProvider({ children }) {
     auditLogs,
     loading,
     spreadsheetId,
+    readOnlyMode,
+    publicReadMode,
+    canManageData,
     login,
     logout,
     loadData,
