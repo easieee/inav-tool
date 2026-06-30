@@ -69,7 +69,10 @@ export function AppProvider({ children }) {
         getAllRows(spreadsheetId, 'Technicians', token),
         getAllRows(spreadsheetId, 'JobOrders', token),
         getAllRows(spreadsheetId, 'JobHistory', token),
-        getAllRows(spreadsheetId, 'AuditLogs', token)
+        // AuditLogs tab may not exist yet on fresh sheets — don't let it block the app
+        token
+          ? getAllRows(spreadsheetId, 'AuditLogs', token).catch(() => [])
+          : Promise.resolve([])
       ]);
       setTechnicians(techs);
       setJobOrders(orders);
