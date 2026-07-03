@@ -5,6 +5,7 @@ import {
   ArrowRight, RefreshCw,
 } from 'lucide-react';
 import DeviceRow from './DeviceRow.jsx';
+import { useApp } from '../../context/AppContext.jsx';
 
 const PLATFORMS_LIST = ['Fleet360', 'TSP', 'LocoNav', 'Fleetx'];
 const CAMERA_OPTIONS = [
@@ -25,6 +26,7 @@ export default function ClientDashboard({
   syncError,
   onForceSync,
 }) {
+  const { user } = useApp();
   const [selectedPlatforms,   setSelectedPlatforms]   = useState([]);
   const [selectedCameraCount, setSelectedCameraCount] = useState('any');
   const [selectedDevices,     setSelectedDevices]     = useState([]);
@@ -105,13 +107,15 @@ export default function ClientDashboard({
           </div>
 
           {/* Right: DEV360 ACCESS */}
-          <button
-            onClick={onOpenDevPortal}
-            className="px-3 py-1.5 border border-brand-primary text-brand-primary text-[10px] font-bold uppercase rounded hover:bg-brand-primary hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
-          >
-            <Lock className="w-3 h-3" />
-            <span>DEV360 ACCESS</span>
-          </button>
+          {user && (
+            <button
+              onClick={onOpenDevPortal}
+              className="px-3 py-1.5 border border-brand-primary text-brand-primary text-[10px] font-bold uppercase rounded hover:bg-brand-primary hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Lock className="w-3 h-3" />
+              <span>DEV360 ACCESS</span>
+            </button>
+          )}
         </div>
       </header>
       {/* Spacer so content doesn't hide behind fixed header */}
@@ -387,7 +391,9 @@ export default function ClientDashboard({
             © {new Date().getFullYear()} iNav Philippines Corp | Precision Telematics
           </div>
           <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-[9px] font-bold text-white/50 uppercase tracking-wider">
-            <span className="hover:text-brand-primary transition-colors cursor-pointer" onClick={onOpenDevPortal}>DEV360 ADMIN ACCESS</span>
+              {user && (
+                <span className="hover:text-brand-primary transition-colors cursor-pointer" onClick={onOpenDevPortal}>DEV360 ADMIN ACCESS</span>
+              )}
             <span>SYSTEM STATUS: <span className="text-green-500">ONLINE</span></span>
             <span className="px-2 py-1 bg-white/5 rounded">VER 2.4.1</span>
           </div>

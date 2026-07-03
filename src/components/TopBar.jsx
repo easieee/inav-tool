@@ -14,7 +14,7 @@ function getDateLabel(date) {
 }
 
 export default function TopBar({ calendarDate, onPrev, onNext, onToday, onAddTech, onCreateJob, onGoHome }) {
-  const { technicians, jobOrders } = useApp();
+  const { technicians, jobOrders, canManageData } = useApp();
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const todayJobs = jobOrders.filter(j => j.date === todayStr);
@@ -99,21 +99,25 @@ export default function TopBar({ calendarDate, onPrev, onNext, onToday, onAddTec
         <div className="w-px h-5 bg-white/10 mx-1" />
 
         {/* Actions */}
-        <button
-          onClick={onAddTech}
-          className="flex items-center gap-1.5 px-3 py-2 border border-white/15 rounded-lg text-sm text-white/60 hover:bg-white/5 hover:text-white transition-colors font-medium"
-        >
-          <UserPlus className="h-3.5 w-3.5" />
-          + Add Tech
-        </button>
+        {canManageData && (
+          <button
+            onClick={onAddTech}
+            className="flex items-center gap-1.5 px-3 py-2 border border-white/15 rounded-lg text-sm text-white/60 hover:bg-white/5 hover:text-white transition-colors font-medium"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            + Add Tech
+          </button>
+        )}
 
-        <button
-          onClick={onCreateJob}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm"
-        >
-          <Plus className="h-4 w-4" />
-          Create Job Order
-        </button>
+        {canManageData && (
+          <button
+            onClick={onCreateJob}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm"
+          >
+            <Plus className="h-4 w-4" />
+            Create Job Order
+          </button>
+        )}
       </div>
     </div>
   );
