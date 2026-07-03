@@ -1,0 +1,77 @@
+export const DEFAULT_SENSORS = [
+  { id: '1',  name: 'Engine cut',        type: 'Digital', description: 'Immobilizer relay to remotely shut down the vehicle engine.' },
+  { id: '2',  name: 'SOS Button',        type: 'Digital', description: 'Panic button for the driver to trigger warning alerts to dispatchers.' },
+  { id: '3',  name: 'TEMP',              type: 'Analog',  description: 'Thermal probe sensor to monitor temperature ranges in cargo or engines.' },
+  { id: '4',  name: 'DOOR',              type: 'Digital', description: 'Magnetic contact sensor indicating passenger or cargo door status.' },
+  { id: '5',  name: 'BUZZER',            type: 'Digital', description: 'Audible alerting buzzer for in-cab speed or boundary reminders.' },
+  { id: '6',  name: 'SPEAKER',           type: 'Analog',  description: 'Audio speaker for voice announcements or remote operations.' },
+  { id: '7',  name: 'MIC',               type: 'Analog',  description: 'In-cabin microphone for remote audio monitoring during emergency situations.' },
+  { id: '8',  name: 'iBUTTON',           type: 'Serial',  description: '1-Wire metal button technology for secure driver identification keys.' },
+  { id: '9',  name: 'RFID',              type: 'Serial',  description: 'Radio frequency card reader for driver logging and personnel tracking.' },
+  { id: '10', name: 'CAP FUEL RS232',    type: 'Serial',  description: 'Capacitive fuel rod level sensor interfacing via RS232 serial.' },
+  { id: '11', name: 'CAP FUEL Analog',   type: 'Analog',  description: 'Capacitive fuel level probe generating direct voltage representation.' },
+  { id: '12', name: 'ULTRASONIC Fuel',   type: 'Analog',  description: 'Non-invasive acoustic sensor measuring fuel level from outside the tank base.' },
+];
+
+export const DEFAULT_ACCESSORIES = [
+  { id: '1',  name: 'ADAS',                   description: 'Advanced Driver Assistance Systems: lane departure & forward collision warnings.' },
+  { id: '2',  name: 'DMS',                    description: 'Driver Monitoring System: visual warning triggers for fatigue, yawning, or phone usage.' },
+  { id: '3',  name: 'SOS Sending',            description: 'Automated relay for sending rapid SOS coordinates to backup emergency servers.' },
+  { id: '4',  name: 'Vibration',              description: 'Internal or external accelerometer sensing crash impacts or towing alerts.' },
+  { id: '5',  name: 'Overspeeding',           description: 'Buzzer notifications or dynamic server flags when device exceeds road thresholds.' },
+  { id: '6',  name: 'Vehicle Battery Level',  description: 'Real-time telemetry reports of the primary automotive battery voltage.' },
+  { id: '7',  name: 'Internal Battery Level', description: 'Status reporting of the hardware locator backup lithium batteries.' },
+  { id: '8',  name: 'Power Cut',              description: 'Instant notification trigger when the main power wire is disconnected.' },
+  { id: '9',  name: 'Tamper Alert',           description: 'Opto-electronic sensor trigger when the housing case is opened or detached.' },
+  { id: '10', name: 'Bluetooth',              description: 'Wireless interface supporting beacons, external temp logs, or direct handheld config.' },
+  { id: '11', name: 'Speaker',               description: 'Dedicated loudspeaker unit for active communications.' },
+  { id: '12', name: 'Mic',                   description: 'Compact cabin-mounted vocal capture unit.' },
+  { id: '13', name: 'IPC',                   description: 'IP Camera interface connection to scale camera operations.' },
+  { id: '14', name: 'LAN Cable',             description: 'Ethernet cable support for gigabit data and network connectivity.' },
+  { id: '15', name: 'Two-Way Comms',         description: 'Full-duplex conversation support linking the operator with dispatcher cabins.' },
+];
+
+export const DEFAULT_DEVICES = [
+  {
+    id: 'dev_1', name: 'WeTracklite', category: 'Standard Tracker', camerasSupported: 0,
+    platforms: ['Fleet360', 'TSP', 'LocoNav', 'Fleetx'],
+    sensors: ['Engine cut'],
+    accessories: ['Internal Battery Level', 'Power Cut', 'Vibration', 'Overspeeding'],
+    description: 'Ultra-compact, light-weight vehicle GPS tracker featuring basic engine ignition status, power disconnect warnings, and movement tracking.',
+  },
+  {
+    id: 'dev_2', name: 'VL103-M', category: 'Advanced Telematics', camerasSupported: 0,
+    platforms: ['Fleet360', 'TSP', 'LocoNav', 'Fleetx'],
+    sensors: ['Engine cut', 'SOS Button', 'TEMP'],
+    accessories: ['Vehicle Battery Level', 'Power Cut', 'Tamper Alert', 'Internal Battery Level'],
+    description: 'Professional high-accuracy multi-system tracker with a durable design, digital input/output, and temperature checking capabilities.',
+  },
+  {
+    id: 'dev_3', name: 'JC100', category: 'Advanced Telematics', camerasSupported: 0,
+    platforms: ['Fleet360', 'TSP', 'LocoNav', 'Fleetx'],
+    sensors: ['Engine cut', 'SOS Button', 'RFID', 'iBUTTON'],
+    accessories: ['Vehicle Battery Level', 'Power Cut', 'Vibration', 'SOS Sending', 'Overspeeding'],
+    description: 'All-in-one professional telematics unit with driver ID and customizable I/O for wide fleet management deployments.',
+  },
+  {
+    id: 'dev_4', name: 'JC400', category: 'Video Telematics', camerasSupported: 1,
+    platforms: ['Fleet360', 'TSP'],
+    sensors: ['Engine cut', 'SOS Button', 'MIC'],
+    accessories: ['ADAS', 'DMS', 'SOS Sending', 'Two-Way Comms', 'Vehicle Battery Level'],
+    description: '4G LTE dashcam-integrated smart tracker with ADAS+DMS collision and fatigue alerts, real-time video streaming, and two-way audio.',
+  },
+  {
+    id: 'dev_5', name: 'JC450', category: 'Video Telematics', camerasSupported: 2,
+    platforms: ['Fleet360', 'TSP'],
+    sensors: ['Engine cut', 'SOS Button', 'MIC', 'SPEAKER'],
+    accessories: ['ADAS', 'DMS', 'SOS Sending', 'Two-Way Comms', 'Bluetooth'],
+    description: 'Dual-camera AI dashcam tracker with front + cabin views, driver behavior monitoring, and real-time cloud dispatch integration.',
+  },
+  {
+    id: 'dev_6', name: 'JC500', category: 'Video Telematics', camerasSupported: 4,
+    platforms: ['Fleet360'],
+    sensors: ['Engine cut', 'SOS Button', 'MIC', 'SPEAKER', 'DOOR'],
+    accessories: ['ADAS', 'DMS', 'SOS Sending', 'Two-Way Comms', 'IPC', 'LAN Cable'],
+    description: 'Quad-camera DVR telematics hub for large vehicles. Supports up to 4 IP cameras, ADAS/DMS AI detection, and gigabit connectivity.',
+  },
+];

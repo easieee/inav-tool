@@ -33,6 +33,11 @@ async function apiFetch(url, options = {}, token) {
   });
   const data = await res.json();
   if (!res.ok) {
+    if (res.status === 401) {
+      const err = new Error('Session expired — please sign in again.');
+      err.isAuthError = true;
+      throw err;
+    }
     throw new Error(data.error?.message || `Sheets API error (${res.status})`);
   }
   return data;

@@ -38,8 +38,8 @@ const TYPE_STYLE = {
 function Row({ label, value }) {
   return (
     <div className="flex gap-2">
-      <span className="text-slate-400 shrink-0 w-20 font-medium">{label}:</span>
-      <span className="text-slate-700 leading-snug">{value}</span>
+      <span className="text-white/40 shrink-0 w-20 font-medium">{label}:</span>
+      <span className="text-white/70 leading-snug">{value}</span>
     </div>
   );
 }
@@ -84,16 +84,16 @@ export default function CalendarPanel({ date }) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-brand-card rounded-xl border border-white/10 shadow-sm overflow-hidden">
 
       {/* ── Panel header ── */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-blue-500" />
-          <span className="font-semibold text-slate-700 text-sm">Technician Calendar Schedule</span>
-          <span className="text-slate-400 text-sm">— {dateStr}</span>
+          <Calendar className="h-4 w-4 text-brand-primary" />
+          <span className="font-semibold text-white/80 text-sm">Technician Calendar Schedule</span>
+          <span className="text-white/40 text-sm">— {dateStr}</span>
         </div>
-        <div className="flex items-center gap-5 text-[11px] font-semibold text-slate-500">
+        <div className="flex items-center gap-5 text-[11px] font-semibold text-white/40">
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-blue-500 inline-block" /> ONSITE
           </span>
@@ -111,15 +111,15 @@ export default function CalendarPanel({ date }) {
         <div style={{ minWidth: totalW }}>
 
           {/* Time ruler — always visible, never vertically scrolled */}
-          <div className="flex border-b border-slate-100 bg-slate-50/70">
+          <div className="flex border-b border-white/5 bg-brand-dark/50">
             <div className="flex" style={{ width: totalW }}>
               {HOURS.map(h => (
                 <div
                   key={h}
                   style={{ width: HOUR_W, minWidth: HOUR_W }}
-                  className="border-r border-slate-100 text-center py-2 shrink-0"
+                  className="border-r border-white/5 text-center py-2 shrink-0"
                 >
-                  <span className="text-[10px] text-slate-400 font-medium">{fmtHour(h)}</span>
+                  <span className="text-[10px] text-white/30 font-medium">{fmtHour(h)}</span>
                 </div>
               ))}
             </div>
@@ -142,7 +142,7 @@ export default function CalendarPanel({ date }) {
             {dayJobs.length === 0 ? (
               // Empty state fills the full fixed height
               <div
-                className="flex items-center justify-center text-slate-400 text-sm"
+                className="flex items-center justify-center text-white/30 text-sm"
                 style={{ height: ROW_H * MIN_VISIBLE_ROWS }}
               >
                 No jobs scheduled for this day.
@@ -154,7 +154,7 @@ export default function CalendarPanel({ date }) {
                   return (
                     <div
                       key={job.id + job._type}
-                      className="flex border-b border-slate-50 last:border-0 hover:bg-blue-50/20 transition-colors"
+                      className="flex border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
                       style={{ height: ROW_H }}
                     >
                       {/* Timeline track */}
@@ -164,7 +164,7 @@ export default function CalendarPanel({ date }) {
                           <div
                             key={h}
                             style={{ width: HOUR_W, minWidth: HOUR_W }}
-                            className="h-full border-r border-slate-50 shrink-0"
+                            className="h-full border-r border-white/5 shrink-0"
                           />
                         ))}
 
@@ -197,7 +197,7 @@ export default function CalendarPanel({ date }) {
                   Array.from({ length: MIN_VISIBLE_ROWS - dayJobs.length }, (_, i) => (
                     <div
                       key={`ghost-${i}`}
-                      className="border-b border-slate-50"
+                      className="border-b border-white/5"
                       style={{ height: ROW_H, width: totalW }}
                     />
                   ))
@@ -211,7 +211,7 @@ export default function CalendarPanel({ date }) {
       {/* ── Tooltip ── */}
       {tooltip && (
         <div
-          className="fixed z-50 bg-white border border-slate-200 rounded-xl shadow-xl w-80 pointer-events-none overflow-hidden"
+          className="fixed z-50 bg-brand-card border border-white/10 rounded-xl shadow-2xl w-80 pointer-events-none overflow-hidden"
           style={{ left: tooltip.x, top: tooltip.y }}
         >
           {/* Coloured header strip */}
@@ -234,9 +234,9 @@ export default function CalendarPanel({ date }) {
             {tooltip.job.description && (
               <Row label="Notes" value={tooltip.job.description} />
             )}
-            <div className="pt-2 mt-1 border-t border-slate-100 text-slate-400">
+            <div className="pt-2 mt-1 border-t border-white/10 text-white/30">
               Created by{' '}
-              <span className="font-semibold text-slate-600">{tooltip.job.createdBy || '—'}</span>
+              <span className="font-semibold text-white/50">{tooltip.job.createdBy || '—'}</span>
             </div>
           </div>
         </div>

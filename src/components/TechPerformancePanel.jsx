@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { UserPlus } from 'lucide-react';
+import TechnicianDetailModal from './TechnicianDetailModal.jsx';
 
 const AVATAR_COLORS = [
   'bg-blue-500', 'bg-emerald-500', 'bg-cyan-500',
@@ -9,11 +10,19 @@ const AVATAR_COLORS = [
 
 export default function TechPerformancePanel({ onAddTech }) {
   const { technicians, jobHistory, canManageData } = useApp();
+  const [selectedTech, setSelectedTech] = useState(null);
+  const [selectedColor, setSelectedColor] = useState('');
+
+  const openModal = (tech, color) => {
+    setSelectedTech(tech);
+    setSelectedColor(color);
+  };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+    <>
+    <div className="bg-brand-card rounded-xl border border-white/10 shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-white/40">
           Technician Performance
         </span>
         {canManageData && (
@@ -28,13 +37,13 @@ export default function TechPerformancePanel({ onAddTech }) {
       </div>
 
       {technicians.length === 0 ? (
-        <p className="px-5 py-8 text-slate-400 text-sm text-center">
+        <p className="px-5 py-8 text-white/40 text-sm text-center">
           {canManageData
             ? 'No technicians yet. Click "+ Add Tech" to get started.'
             : 'No technicians available yet.'}
         </p>
       ) : (
-        <div className="divide-y divide-slate-50">
+        <div className="divide-y divide-white/5">
           {technicians.map((tech, idx) => {
             const initials = tech.name
               .split(' ')
@@ -53,24 +62,29 @@ export default function TechPerformancePanel({ onAddTech }) {
             const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
 
             return (
-              <div key={tech.id} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors">
+              <div
+                key={tech.id}
+                onClick={() => openModal(tech, color)}
+                className="flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors cursor-pointer"
+                title="Click to view details"
+              >
                 <div className={`h-9 w-9 rounded-full ${color} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
                   {initials}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-800 text-sm leading-none">{tech.name}</p>
-                  <p className="text-slate-400 text-xs mt-0.5">
+                  <p className="font-semibold text-white text-sm leading-none">{tech.name}</p>
+                  <p className="text-white/40 text-xs mt-0.5">
                     Done: {done} | Back-Jobs: {backDone}
                   </p>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <p className="text-blue-500 font-bold text-sm leading-none">
+                  <p className="text-blue-400 font-bold text-sm leading-none">
                     {tech.points ?? 0} pts
                   </p>
                   {hasHistory && (
-                    <p className="text-emerald-500 text-[10px] mt-0.5">+5 last job</p>
+                    <p className="text-emerald-400 text-[10px] mt-0.5">+3 last job</p>
                   )}
                 </div>
               </div>
@@ -79,5 +93,14 @@ export default function TechPerformancePanel({ onAddTech }) {
         </div>
       )}
     </div>
+
+    {selectedTech && (
+      <TechnicianDetailModal
+        tech={selectedTech}
+        colorClass={selectedColor}
+        onClose={() => setSelectedTech(null)}
+      />
+    )}
+    </>
   );
 }

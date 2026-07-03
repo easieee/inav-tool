@@ -30,6 +30,19 @@ export function AppProvider({ children }) {
   const userRef = useRef(null);
   useEffect(() => { userRef.current = user; }, [user]);
 
+  // Ref for logout so write-operation error handlers can call it without stale closure
+  const logoutRef = useRef(null);
+
+  /** Centralized API error handler — auto-logouts on expired token (401). */
+  const handleApiError = useCallback((err, prefix) => {
+    if (err.isAuthError) {
+      toast.error('Session expired. Please sign in again.', { duration: 5000 });
+      if (logoutRef.current) logoutRef.current();
+    } else {
+      toast.error(`${prefix}: ${err.message}`);
+    }
+  }, []);
+
   const addLog = useCallback((type, title, description) => {
     const logEntry = {
       id: Date.now().toString(36),
@@ -130,6 +143,9 @@ export function AppProvider({ children }) {
     }
   }, [SESSION_KEY, publicReadMode, loadData]);
 
+  // Keep logoutRef in sync so handleApiError can always call the latest logout
+  useEffect(() => { logoutRef.current = logout; }, [logout]);
+
   // Restore session on page refresh
   useEffect(() => {
     try {
@@ -187,13 +203,16 @@ export function AppProvider({ children }) {
     };
     try {
       await appendRow(spreadsheetId, 'Technicians', tech, user.accessToken);
-      await loadData(user.accessToken);
+      // Optimistically add to local state so the panel updates instantly,
+      // then sync in the background to confirm the sheet is consistent.
+      setTechnicians(prev => [...prev, tech]);
       addLog('tech', 'Technician Added', `${tech.name} was registered as a technician.`);
       toast.success('Technician added!');
+      loadData(user.accessToken).catch(() => {});
     } catch (err) {
-      toast.error('Failed to add technician: ' + err.message);
+      handleApiError(err, 'Failed to add technician');
     }
-  }, [user, canManageData, spreadsheetId, loadData, addLog]);
+  }, [user, canManageData, spreadsheetId, loadData, addLog, handleApiError]);
 
   const updateTechnician = useCallback(async (id, data) => {
     if (!user) return;
@@ -202,9 +221,9 @@ export function AppProvider({ children }) {
       await loadData(user.accessToken);
       toast.success('Technician updated!');
     } catch (err) {
-      toast.error('Failed to update: ' + err.message);
+      handleApiError(err, 'Failed to update technician');
     }
-  }, [user, spreadsheetId, loadData]);
+  }, [user, spreadsheetId, loadData, handleApiError]);
 
   /** Internal helper — update points without reloading all data */
   const _adjustPoints = useCallback(async (techId, delta) => {
@@ -246,9 +265,9 @@ export function AppProvider({ children }) {
       addLog('job', 'Job Order Created', `"${job.title}" was created by ${user.name}.`);
       toast.success('Job order created!');
     } catch (err) {
-      toast.error('Failed to create job: ' + err.message);
+      handleApiError(err, 'Failed to create job');
     }
-  }, [user, canManageData, spreadsheetId, loadData, addLog]);
+  }, [user, canManageData, spreadsheetId, loadData, addLog, handleApiError]);
 
   const updateJobOrder = useCallback(async (id, data) => {
     if (!user) return;
@@ -257,9 +276,9 @@ export function AppProvider({ children }) {
       await loadData(user.accessToken);
       toast.success('Job order updated!');
     } catch (err) {
-      toast.error('Failed to update job: ' + err.message);
+      handleApiError(err, 'Failed to update job');
     }
-  }, [user, spreadsheetId, loadData]);
+  }, [user, spreadsheetId, loadData, handleApiError]);
 
   const deleteJobOrder = useCallback(async (id) => {
     if (!user) return;
@@ -268,9 +287,9 @@ export function AppProvider({ children }) {
       await loadData(user.accessToken);
       toast.success('Job order deleted.');
     } catch (err) {
-      toast.error('Failed to delete: ' + err.message);
+      handleApiError(err, 'Failed to delete job');
     }
-  }, [user, spreadsheetId, loadData]);
+  }, [user, spreadsheetId, loadData, handleApiError]);
 
   /**
    * Mark a regular job as DONE:
@@ -293,19 +312,19 @@ export function AppProvider({ children }) {
       await appendRow(spreadsheetId, 'JobHistory', histEntry, user.accessToken);
       await deleteRowById(spreadsheetId, 'JobOrders', id, user.accessToken);
 
-      // +5 for each technician
+      // +3 for each technician
       for (const techId of (job.technicianIds || [])) {
-        await _adjustPoints(techId, 5);
+        await _adjustPoints(techId, 3);
       }
 
       await loadData(user.accessToken);
-      addLog('job', 'Job Completed', `"${job.title}" marked done. +5 points awarded to each technician.`);
-      toast.success('Job completed! +5 pts per technician.');
+      addLog('job', 'Job Completed', `"${job.title}" marked done. +3 points awarded to each technician.`);
+      toast.success('Job completed! +3 pts per technician.');
     } catch (err) {
-      toast.error('Failed to mark done: ' + err.message);
+      handleApiError(err, 'Failed to mark job done');
       setLoading(false);
     }
-  }, [user, jobOrders, spreadsheetId, _adjustPoints, loadData, addLog]);
+  }, [user, jobOrders, spreadsheetId, _adjustPoints, loadData, addLog, handleApiError]);
 
   /**
    * Create a Back-Job from a history entry:
@@ -338,20 +357,34 @@ export function AppProvider({ children }) {
       };
       await appendRow(spreadsheetId, 'JobOrders', backJob, user.accessToken);
 
-      // -2 for original technicians
+      // -5 for original technicians
       const origTechIds = Array.isArray(orig.technicianIds) ? orig.technicianIds : [];
       for (const techId of origTechIds) {
-        await _adjustPoints(techId, -2);
+        await _adjustPoints(techId, -5);
       }
 
       await loadData(user.accessToken);
-      addLog('backjob', 'Back-Job Created', `Back-job created from "${orig.title}". Original technicians penalized -2 pts.`);
-      toast.success('Back-job created! -2 pts deducted from original technicians.');
+      addLog('backjob', 'Back-Job Created', `Back-job created from "${orig.title}". Original technicians penalized -5 pts.`);
+      toast.success('Back-job created! -5 pts deducted from original technicians.');
     } catch (err) {
-      toast.error('Failed to create back-job: ' + err.message);
+      handleApiError(err, 'Failed to create back-job');
       setLoading(false);
     }
-  }, [user, jobHistory, spreadsheetId, _adjustPoints, loadData, addLog]);
+  }, [user, jobHistory, spreadsheetId, _adjustPoints, loadData, addLog, handleApiError]);
+
+  const deleteTechnician = useCallback(async (id) => {
+    if (!user) return;
+    const tech = technicians.find(t => t.id === id);
+    if (!tech) return;
+    try {
+      await deleteRowById(spreadsheetId, 'Technicians', id, user.accessToken);
+      await loadData(user.accessToken);
+      addLog('tech', 'Technician Removed', `${tech.name} (${tech.email || 'no email'}) was removed from the system.`);
+      toast.success(`${tech.name} removed.`);
+    } catch (err) {
+      handleApiError(err, 'Failed to remove technician');
+    }
+  }, [user, technicians, spreadsheetId, loadData, addLog, handleApiError]);
 
   const value = {
     user,
@@ -369,6 +402,7 @@ export function AppProvider({ children }) {
     loadData,
     addTechnician,
     updateTechnician,
+    deleteTechnician,
     addJobOrder,
     updateJobOrder,
     deleteJobOrder,

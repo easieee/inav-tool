@@ -24,26 +24,26 @@ function JobRow({ job }) {
   };
 
   return (
-    <div className={`flex items-start gap-4 px-5 py-4 border-b border-slate-50 last:border-0 transition-colors hover:bg-slate-50/60 ${isBackJob ? 'bg-orange-50/40' : ''}`}>
+    <div className={`flex items-start gap-4 px-5 py-4 border-b border-white/5 last:border-0 transition-colors hover:bg-white/5 ${isBackJob ? 'bg-orange-500/5' : ''}`}>
 
       {/* Status + time */}
       <div className="shrink-0 w-24 text-right">
         <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
           isBackJob
-            ? 'bg-orange-100 text-orange-600'
-            : 'bg-blue-100 text-blue-600'
+            ? 'bg-orange-500/20 text-orange-400'
+            : 'bg-blue-500/20 text-blue-400'
         }`}>
           {isBackJob ? 'Back-Job' : 'Pending'}
         </span>
-        <p className="text-slate-400 text-[11px] mt-1 font-medium">
+        <p className="text-white/40 text-[11px] mt-1 font-medium">
           {job.startTime} – {job.endTime}
         </p>
       </div>
 
       {/* Details */}
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-slate-800 text-sm mb-1 leading-tight">{job.title}</p>
-        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-400">
+        <p className="font-semibold text-white text-sm mb-1 leading-tight">{job.title}</p>
+        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-white/40">
           {job.device   && <span className="flex items-center gap-1"><Monitor className="h-3 w-3 shrink-0" />{job.device}</span>}
           {job.location && <span className="flex items-center gap-1"><MapPin   className="h-3 w-3 shrink-0" />{job.location}</span>}
           {techNames    && <span className="flex items-center gap-1"><User     className="h-3 w-3 shrink-0" />Assigned: {techNames}</span>}
@@ -98,13 +98,13 @@ export default function DispatchQueue({ onCreateJob }) {
   const todayCount = jobOrders.filter(j => j.date === today).length;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+    <div className="bg-brand-card rounded-xl border border-white/10 shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-white/40">
           Active Dispatch Queue
         </span>
         {todayCount > 0 && (
-          <span className="bg-blue-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+          <span className="bg-brand-primary/20 text-brand-primary text-[10px] font-bold px-2.5 py-0.5 rounded-full">
             {todayCount} Active Today
           </span>
         )}
@@ -112,11 +112,11 @@ export default function DispatchQueue({ onCreateJob }) {
 
       {jobOrders.length === 0 ? (
         <div className="py-10 text-center">
-          <p className="text-slate-400 text-sm mb-3">No active job orders.</p>
+          <p className="text-white/40 text-sm mb-3">No active job orders.</p>
           {canManageData && (
             <button
               onClick={onCreateJob}
-              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 bg-brand-primary hover:bg-brand-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               <Plus className="h-4 w-4" />
               Create Job Order

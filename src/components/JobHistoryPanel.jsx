@@ -15,22 +15,22 @@ function HistoryCard({ job }) {
   const isBack = job.isBackJob === 'true';
 
   return (
-    <div className="flex items-start gap-4 px-5 py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors">
+    <div className="flex items-start gap-4 px-5 py-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
             isBack
-              ? 'bg-amber-100 text-amber-600'
-              : 'bg-emerald-100 text-emerald-600'
+              ? 'bg-amber-500/20 text-amber-400'
+              : 'bg-emerald-500/20 text-emerald-400'
           }`}>
             {isBack ? 'Back-Job Done' : 'Completed'}
           </span>
         </div>
-        <p className="font-semibold text-slate-800 text-sm leading-tight">{job.title}</p>
-        <p className="text-slate-400 text-xs mt-0.5">
+        <p className="font-semibold text-white text-sm leading-tight">{job.title}</p>
+        <p className="text-white/40 text-xs mt-0.5">
           Device: {job.device || '—'} · Assigned: {techNames || '—'}
         </p>
-        <p className="text-slate-400 text-xs">
+        <p className="text-white/40 text-xs">
           Schedule: {job.startTime} – {job.endTime}
         </p>
       </div>
@@ -38,7 +38,7 @@ function HistoryCard({ job }) {
       {canManageData && (
         <button
           onClick={() => setShowBackJob(true)}
-          className="shrink-0 flex items-center gap-1.5 border border-red-200 text-red-400 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+          className="shrink-0 flex items-center gap-1.5 border border-brand-primary/30 text-brand-primary/70 hover:bg-brand-primary/10 hover:text-brand-primary px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
         >
           <RotateCcw className="h-3 w-3" />
           Create Back-Job
@@ -60,16 +60,16 @@ export default function JobHistoryPanel() {
   );
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-5 py-3 border-b border-slate-100">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+    <div className="bg-brand-card rounded-xl border border-white/10 shadow-sm overflow-hidden">
+      <div className="px-5 py-3 border-b border-white/10">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-white/40">
           Completed Job History
         </span>
       </div>
 
       <div className="max-h-72 overflow-y-auto">
         {sorted.length === 0 ? (
-          <p className="px-5 py-8 text-slate-400 text-sm text-center">
+          <p className="px-5 py-8 text-white/40 text-sm text-center">
             No completed jobs yet. Mark a job as done to see it here.
           </p>
         ) : (

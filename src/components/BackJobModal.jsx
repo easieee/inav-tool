@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { X, RotateCcw } from 'lucide-react';
 import { todayStr } from '../lib/utils.js';
+import DatePickerField from './DatePickerField.jsx';
+import TimePickerField from './TimePickerField.jsx';
 
-const INPUT = 'w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 text-sm';
+const INPUT = 'w-full bg-brand-dark border border-white/10 rounded-xl px-3 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 text-sm';
 
 export default function BackJobModal({ isOpen, historyJob, onClose }) {
   const { createBackJob, technicians } = useApp();
@@ -33,15 +35,15 @@ export default function BackJobModal({ isOpen, historyJob, onClose }) {
     .join(', ');
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg border border-slate-200 shadow-2xl">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-brand-card rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl">
 
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+        <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-2">
             <RotateCcw className="h-5 w-5 text-amber-400" />
-            <h2 className="text-slate-800 font-semibold text-lg">Create Back-Job</h2>
+            <h2 className="text-white font-semibold text-lg">Create Back-Job</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -54,7 +56,7 @@ export default function BackJobModal({ isOpen, historyJob, onClose }) {
               Original technicians: <span className="font-medium text-amber-200/80">{origTechNames || '—'}</span>
             </p>
             <p className="text-amber-200/50 text-xs mt-0.5">
-              Each original technician will receive <strong className="text-red-400">-2 pts</strong> for this back-job.
+              Each original technician will receive <strong className="text-red-400">-5 pts</strong> for this back-job.
             </p>
           </div>
 
@@ -62,22 +64,22 @@ export default function BackJobModal({ isOpen, historyJob, onClose }) {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-slate-300 text-sm font-medium mb-1.5">Date</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className={INPUT} />
+              <DatePickerField value={date} onChange={setDate} />
             </div>
             <div>
               <label className="block text-slate-300 text-sm font-medium mb-1.5">Start</label>
-              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={INPUT} />
+              <TimePickerField value={startTime} onChange={setStartTime} />
             </div>
             <div>
               <label className="block text-slate-300 text-sm font-medium mb-1.5">End</label>
-              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className={INPUT} />
+              <TimePickerField value={endTime} onChange={setEndTime} />
             </div>
           </div>
 
           {/* Assign technicians */}
           <div>
             <label className="block text-slate-300 text-sm font-medium mb-1.5">
-              Assign Technician(s) <span className="text-red-400">*</span>
+              Assign Technician(s) <span className="text-brand-primary">*</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
               {technicians.map(t => (
@@ -85,18 +87,18 @@ export default function BackJobModal({ isOpen, historyJob, onClose }) {
                   key={t.id}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-colors text-sm ${
                     selectedTechs.includes(t.id)
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
+                      ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
+                      : 'border-white/10 bg-brand-dark text-white/60 hover:border-white/20'
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={selectedTechs.includes(t.id)}
                     onChange={() => toggleTech(t.id)}
-                    className="accent-blue-500"
+                    className="accent-brand-primary"
                   />
                   <span className="truncate">{t.name}</span>
-                  <span className="ml-auto text-xs text-amber-400 font-medium shrink-0">+5 pts</span>
+                  <span className="ml-auto text-xs text-emerald-400 font-medium shrink-0">+3 pts</span>
                 </label>
               ))}
             </div>
@@ -104,7 +106,7 @@ export default function BackJobModal({ isOpen, historyJob, onClose }) {
 
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
-              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
+              className="flex-1 bg-white/5 hover:bg-white/10 text-white/50 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
               Cancel
             </button>
             <button

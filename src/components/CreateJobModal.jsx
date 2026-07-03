@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { X } from 'lucide-react';
 import { todayStr } from '../lib/utils.js';
+import DatePickerField from './DatePickerField.jsx';
+import TimePickerField from './TimePickerField.jsx';
 
-const INPUT = 'w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 text-sm';
+const INPUT = 'w-full bg-brand-dark border border-white/10 rounded-xl px-3 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 text-sm';
 
 function Label({ children, required }) {
   return (
-    <label className="block text-slate-600 text-sm font-medium mb-1.5">
-      {children} {required && <span className="text-red-400">*</span>}
+    <label className="block text-white/50 text-sm font-medium mb-1.5">
+      {children} {required && <span className="text-brand-primary">*</span>}
     </label>
   );
 }
@@ -54,13 +56,13 @@ export default function CreateJobModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl border border-slate-200 shadow-2xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-brand-card rounded-2xl w-full max-w-2xl border border-white/10 shadow-2xl max-h-[90vh] flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
-          <h2 className="text-slate-800 font-semibold text-lg">Create Job Order</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+        <div className="flex items-center justify-between p-6 border-b border-white/10 shrink-0">
+          <h2 className="text-white font-semibold text-lg">Create Job Order</h2>
+          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -89,16 +91,16 @@ export default function CreateJobModal({ isOpen, onClose }) {
 
             <div>
               <Label required>Date</Label>
-              <input type="date" value={form.date} onChange={set('date')} required className={INPUT} />
+              <DatePickerField value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label>Start Time</Label>
-                <input type="time" value={form.startTime} onChange={set('startTime')} className={INPUT} />
+                <TimePickerField value={form.startTime} onChange={v => setForm(f => ({ ...f, startTime: v }))} />
               </div>
               <div>
                 <Label>End Time</Label>
-                <input type="time" value={form.endTime} onChange={set('endTime')} className={INPUT} />
+                <TimePickerField value={form.endTime} onChange={v => setForm(f => ({ ...f, endTime: v }))} />
               </div>
             </div>
           </div>
@@ -107,7 +109,7 @@ export default function CreateJobModal({ isOpen, onClose }) {
           <div>
             <Label required>Assign Technician(s)</Label>
             {technicians.length === 0 ? (
-              <p className="text-slate-500 text-sm">No technicians found. Add technicians first.</p>
+              <p className="text-white/40 text-sm">No technicians found. Add technicians first.</p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {technicians.map(t => (
@@ -115,15 +117,15 @@ export default function CreateJobModal({ isOpen, onClose }) {
                     key={t.id}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-colors text-sm ${
                       form.technicianIds.includes(t.id)
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
+                      ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
+                      : 'border-white/10 bg-brand-dark text-white/60 hover:border-white/20'
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={form.technicianIds.includes(t.id)}
                       onChange={() => toggleTech(t.id)}
-                      className="accent-blue-500"
+                      className="accent-brand-primary"
                     />
                     <span className="truncate">{t.name}</span>
                   </label>
@@ -146,13 +148,13 @@ export default function CreateJobModal({ isOpen, onClose }) {
           {/* Buttons */}
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}
-              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
+              className="flex-1 bg-white/5 hover:bg-white/10 text-white/50 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
               Cancel
             </button>
             <button
               type="submit"
               disabled={busy || !form.title || !form.client || form.technicianIds.length === 0}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+              className="flex-1 bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
             >
               {busy ? 'Creating…' : 'Create Job Order'}
             </button>
