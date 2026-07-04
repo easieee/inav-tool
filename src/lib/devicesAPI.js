@@ -1,7 +1,42 @@
 /**
  * Google Sheets API v4 helpers for Devices / Sensors / Accessories data.
- * Ported from devices-and-compatibility/src/lib/sheetsService.ts
+ * Supports both authenticated (OAuth token) and public (GViz) reads.
  */
+
+// ─── GViz public-read helpers ─────────────────────────────────────────────
+
+function parseGvizPayload(text) {
+  const start = text.indexOf('{');
+  const end   = text.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) throw new Error('Invalid GViz response');
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+function gvizTableToRows(table) {
+  const headers = (table.cols || []).map(col => String(col.label || col.id || '').trim());
+  const rows = (table.rows || []).map(r =>
+    (r.c || []).map(cell => {
+      if (!cell) return '';
+      if (cell.f !== undefined && cell.f !== null) return String(cell.f);
+      if (cell.v !== undefined && cell.v !== null) return String(cell.v);
+      return '';
+    })
+  );
+  return [headers, ...rows];
+}
+
+async function fetchPublicSheetValues(spreadsheetId, sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=out:json`;
+  const res  = await fetch(url);
+  const text = await res.text();
+  if (!res.ok) throw new Error(`Public sheet read failed (${res.status})`);
+  const payload = parseGvizPayload(text);
+  if (payload.status !== 'ok' || !payload.table) {
+    const detail = payload.errors?.[0]?.detailed_message || payload.errors?.[0]?.message || 'Unknown error';
+    throw new Error(`Public sheet read failed: ${detail}`);
+  }
+  return gvizTableToRows(payload.table);
+}
 
 // ─── Parsers ──────────────────────────────────────────────────────────────
 
@@ -70,51 +105,60 @@ function parseAppsScriptAccessories(rawList) {
 
 /**
  * Load Devices / Sensors / Accessories from a Google Spreadsheet.
- * @param {string} accessToken
+ * Pass `accessToken = null` for unauthenticated public reads via GViz.
+ * @param {string|null} accessToken
  * @param {string} spreadsheetId
  * @returns {Promise<{devices, sensors, accessories}>}
  */
 export async function loadDevicesFromSheets(accessToken, spreadsheetId) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet`
-    + `?ranges=Devices!A1:I1000&ranges=Sensors!A1:D1000&ranges=Accessories!A1:C1000`;
+  let devicesValues, sensorsValues, accessoriesValues;
 
-  let res;
-  try {
-    res = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-  } catch (err) {
-    throw new Error(`Failed to connect to Google Sheets API: ${err.message || String(err)}`);
-  }
+  if (accessToken) {
+    // ── Authenticated read via Sheets API v4 ──────────────────
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet`
+      + `?ranges=Devices!A1:I1000&ranges=Sensors!A1:D1000&ranges=Accessories!A1:C1000`;
 
-  if (!res.ok) {
-    if (res.status === 401) {
-      throw new Error('UNAUTHORIZED: Google OAuth session expired. Please sign in again.');
-    }
-    const errText = await res.text();
-    let message = `Google Sheets API error (${res.status})`;
+    let res;
     try {
-      const errJson = JSON.parse(errText);
-      if (errJson.error?.message) message = errJson.error.message;
-    } catch {}
-    throw new Error(message);
+      res = await fetch(url, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      });
+    } catch (err) {
+      throw new Error(`Failed to connect to Google Sheets API: ${err.message || String(err)}`);
+    }
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error('Session expired — please sign in again.');
+      }
+      const errText = await res.text();
+      let message = `Google Sheets API error (${res.status})`;
+      try { const j = JSON.parse(errText); if (j.error?.message) message = j.error.message; } catch {}
+      throw new Error(message);
+    }
+
+    const data = await res.json();
+    const vr   = data.valueRanges || [];
+    devicesValues     = parseSheetsAPIRows(vr.find(v => v.range?.includes('Devices'))?.values     || []);
+    sensorsValues     = parseSheetsAPIRows(vr.find(v => v.range?.includes('Sensors'))?.values     || []);
+    accessoriesValues = parseSheetsAPIRows(vr.find(v => v.range?.includes('Accessories'))?.values || []);
+  } else {
+    // ── Public read via GViz (no auth required) ───────────────
+    const [devRaw, senRaw, accRaw] = await Promise.all([
+      fetchPublicSheetValues(spreadsheetId, 'Devices'),
+      fetchPublicSheetValues(spreadsheetId, 'Sensors'),
+      fetchPublicSheetValues(spreadsheetId, 'Accessories'),
+    ]);
+    devicesValues     = parseSheetsAPIRows(devRaw);
+    sensorsValues     = parseSheetsAPIRows(senRaw);
+    accessoriesValues = parseSheetsAPIRows(accRaw);
   }
-
-  const data = await res.json();
-  const valueRanges = data.valueRanges || [];
-
-  const devicesRange     = valueRanges.find(vr => vr.range && vr.range.includes('Devices'));
-  const sensorsRange     = valueRanges.find(vr => vr.range && vr.range.includes('Sensors'));
-  const accessoriesRange = valueRanges.find(vr => vr.range && vr.range.includes('Accessories'));
 
   return {
-    devices:     parseAppsScriptDevices(parseSheetsAPIRows(devicesRange?.values     || [])),
-    sensors:     parseAppsScriptSensors(parseSheetsAPIRows(sensorsRange?.values     || [])),
-    accessories: parseAppsScriptAccessories(parseSheetsAPIRows(accessoriesRange?.values || [])),
+    devices:     parseAppsScriptDevices(devicesValues),
+    sensors:     parseAppsScriptSensors(sensorsValues),
+    accessories: parseAppsScriptAccessories(accessoriesValues),
   };
 }
 

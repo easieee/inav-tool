@@ -62,8 +62,9 @@ export default function DevicesApp({ onGoHome }) {
 
   // ── On mount — load once ───────────────────────────────────
   useEffect(() => {
-    if (user?.accessToken && spreadsheetId) {
-      handleLoadFromSheets(user.accessToken, spreadsheetId);
+    if (spreadsheetId) {
+      // Load from Sheets: authenticated if signed in, public GViz if not
+      handleLoadFromSheets(user?.accessToken || null, spreadsheetId);
     } else {
       loadLocalFallback();
       setLoaded(true);
@@ -73,8 +74,8 @@ export default function DevicesApp({ onGoHome }) {
 
   // ── Force sync (retry) ─────────────────────────────────────
   const handleForceSync = useCallback(async () => {
-    if (user?.accessToken && spreadsheetId) {
-      await handleLoadFromSheets(user.accessToken, spreadsheetId);
+    if (spreadsheetId) {
+      await handleLoadFromSheets(user?.accessToken || null, spreadsheetId);
     }
   }, [user, spreadsheetId, handleLoadFromSheets]);
 
