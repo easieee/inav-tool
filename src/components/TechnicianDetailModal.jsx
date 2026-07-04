@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { X, Trash2, Phone, Mail, CheckCircle2, RotateCcw, AlertTriangle } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
+import { calculateTechPoints } from '../lib/utils.js';
 
 export default function TechnicianDetailModal({ tech, onClose, colorClass }) {
   const { jobHistory, deleteTechnician, canManageData } = useApp();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const techJobs     = jobHistory.filter(h => (h.technicianIds || []).includes(tech.id));
-  const completedJobs = techJobs.filter(h => h.isBackJob !== 'true');
-  const backJobs      = techJobs.filter(h => h.isBackJob === 'true');
-  const sorted        = [...techJobs].sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
+  const techJobs      = jobHistory.filter(h => (h.technicianIds || []).includes(tech.id));
+  const completedJobs  = techJobs.filter(h => h.isBackJob !== 'true');
+  const backJobs       = techJobs.filter(h => h.isBackJob === 'true');
+  const sorted         = [...techJobs].sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
+  const pts            = calculateTechPoints(tech.id, jobHistory);
 
   const initials = tech.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
@@ -43,7 +45,7 @@ export default function TechnicianDetailModal({ tech, onClose, colorClass }) {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-px bg-white/5 border-b border-white/10">
           <div className="bg-brand-card px-4 py-3.5 text-center">
-            <p className="text-blue-400 font-bold text-xl leading-none">{tech.points ?? 0}</p>
+            <p className="text-blue-400 font-bold text-xl leading-none">{pts}</p>
             <p className="text-white/35 text-[10px] uppercase tracking-wider mt-1.5">Points</p>
           </div>
           <div className="bg-brand-card px-4 py-3.5 text-center">

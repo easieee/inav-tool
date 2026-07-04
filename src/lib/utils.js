@@ -20,6 +20,40 @@ export function formatTime(timeStr) {
   return `${hour}:${String(m).padStart(2, '0')} ${period}`;
 }
 
+/**
+ * Derive a technician's point total entirely from JobHistory.
+ * Points are NEVER stored in the sheet — calculated on every render so
+ * manual edits to the sheet have zero effect on the displayed score.
+ *
+ *   +3  per regular completed job where this tech was assigned
+ *   +3  per back-job completion where this tech is the new assignee
+ *   -5  for each back-job whose originalJobId points to a job where
+ *        this tech was one of the original (failing) technicians
+ */
+export function calculateTechPoints(techId, jobHistory) {
+  const byId = new Map(jobHistory.map(j => [j.id, j]));
+  let pts = 0;
+
+  for (const job of jobHistory) {
+    const techs  = Array.isArray(job.technicianIds) ? job.technicianIds : [];
+    const isBack = job.isBackJob === 'true';
+
+    // Every completed job (regular or back-job) gives +3 to assigned techs
+    if (techs.includes(techId)) pts += 3;
+
+    // Back-job completion → penalise the original job's technicians
+    if (isBack && job.originalJobId) {
+      const orig = byId.get(job.originalJobId);
+      if (orig) {
+        const origTechs = Array.isArray(orig.technicianIds) ? orig.technicianIds : [];
+        if (origTechs.includes(techId)) pts -= 5;
+      }
+    }
+  }
+
+  return pts;
+}
+
 /** Return today as "YYYY-MM-DD" */
 export function todayStr() {
   return format(new Date(), 'yyyy-MM-dd');

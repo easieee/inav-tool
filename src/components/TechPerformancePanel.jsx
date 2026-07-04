@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { UserPlus } from 'lucide-react';
 import TechnicianDetailModal from './TechnicianDetailModal.jsx';
+import { calculateTechPoints } from '../lib/utils.js';
 
 const AVATAR_COLORS = [
   'bg-blue-500', 'bg-emerald-500', 'bg-cyan-500',
@@ -60,6 +61,7 @@ export default function TechPerformancePanel({ onAddTech }) {
             ).length;
             const hasHistory = done + backDone > 0;
             const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+            const pts = calculateTechPoints(tech.id, jobHistory);
 
             return (
               <div
@@ -81,7 +83,7 @@ export default function TechPerformancePanel({ onAddTech }) {
 
                 <div className="text-right shrink-0">
                   <p className="text-blue-400 font-bold text-sm leading-none">
-                    {tech.points ?? 0} pts
+                    {pts} pts
                   </p>
                   {hasHistory && (
                     <p className="text-emerald-400 text-[10px] mt-0.5">+3 last job</p>

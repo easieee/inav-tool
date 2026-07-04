@@ -15,7 +15,7 @@ export const SHEET_HEADERS = {
   ],
   JobHistory: [
     'id', 'title', 'description', 'client', 'location', 'device',
-    'date', 'startTime', 'endTime', 'technicianIds',
+    'date', 'startTime', 'endTime', 'technicianIds', 'technicianNames',
     'createdBy', 'createdByEmail', 'createdAt', 'completedAt',
     'isBackJob', 'originalJobId'
   ],
@@ -107,7 +107,7 @@ function rowToObject(row, sheetName, headerIndexMap = null) {
       ? obj.technicianIds.split('|').filter(Boolean)
       : [];
   }
-  // Parse numeric points
+  // Parse numeric points (ignored — points are now calculated from JobHistory)
   if (obj.points !== undefined) {
     obj.points = parseInt(obj.points, 10) || 0;
   }

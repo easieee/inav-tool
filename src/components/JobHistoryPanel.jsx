@@ -7,10 +7,13 @@ function HistoryCard({ job }) {
   const { technicians, canManageData } = useApp();
   const [showBackJob, setShowBackJob] = useState(false);
 
-  const techNames = (job.technicianIds || [])
-    .map(id => technicians.find(t => t.id === id)?.name || id)
-    .filter(Boolean)
-    .join(', ');
+  // Use the name snapshot stored at completion time; fall back to live lookup
+  // so records created before this feature also display correctly.
+  const techNames = job.technicianNames ||
+    (job.technicianIds || [])
+      .map(id => technicians.find(t => t.id === id)?.name || id)
+      .filter(Boolean)
+      .join(', ');
 
   const isBack = job.isBackJob === 'true';
 
