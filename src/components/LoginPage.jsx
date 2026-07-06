@@ -46,7 +46,7 @@ export default function LoginPage() {
           <div className="bg-blue-600 p-4 rounded-2xl mb-4 shadow-lg shadow-blue-900/50">
             <Wrench className="h-10 w-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">TechScheduler</h1>
+          <h1 className="text-2xl font-bold text-slate-800">iNav Tool</h1>
           <p className="text-slate-500 mt-1 text-sm">Technician Scheduling System</p>
         </div>
 

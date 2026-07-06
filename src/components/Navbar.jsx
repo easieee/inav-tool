@@ -21,7 +21,7 @@ export default function Navbar() {
             <div className="bg-blue-600 p-1.5 rounded-lg">
               <Wrench className="h-5 w-5 text-white" />
             </div>
-            <span className="text-white font-bold text-lg hidden sm:block">TechScheduler</span>
+            <span className="text-white font-bold text-lg hidden sm:block">iNav Tool</span>
           </div>
 
           {/* Tabs */}

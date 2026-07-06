@@ -1,7 +1,7 @@
 import React from 'react';
-import { Calendar, Monitor, ChevronRight, LogOut } from 'lucide-react';
+import { Calendar, Monitor, ChevronRight, LogOut, Gauge, Smartphone } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
-import { useApp } from '../context/AppContext.jsx';
+import { useApp } from '../../context/AppContext.jsx';
 
 function GoogleIcon() {
   return (
@@ -14,7 +14,7 @@ function GoogleIcon() {
   );
 }
 
-export default function HomeDashboard({ onEnterScheduler, onEnterDevices }) {
+export default function HomeDashboard({ onEnterScheduler, onEnterDevices, onEnterFuelSensor, onEnterSimManager }) {
   const { user, login, logout } = useApp();
 
   const googleLogin = useGoogleLogin({
@@ -98,7 +98,7 @@ export default function HomeDashboard({ onEnterScheduler, onEnterDevices }) {
         </div>
 
         {/* Tool cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-2xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 w-full max-w-5xl">
 
           {/* Technician Scheduler */}
           <button
@@ -138,6 +138,48 @@ export default function HomeDashboard({ onEnterScheduler, onEnterDevices }) {
             </p>
             <div className="mt-6 flex items-center gap-1.5 text-brand-primary text-sm font-semibold">
               Open Devices
+              <ChevronRight className="h-4 w-4" />
+            </div>
+          </button>
+
+          {/* Fuel Sensor Calibration */}
+          <button
+            onClick={onEnterFuelSensor}
+            className="bg-brand-card border border-white/10 rounded-2xl p-8 shadow-sm
+                       hover:border-brand-primary/40 hover:shadow-[0_0_24px_rgba(216,41,46,0.08)] hover:-translate-y-0.5
+                       transition-all duration-200 group text-left cursor-pointer"
+          >
+            <div className="w-12 h-12 bg-brand-primary/10 rounded-xl flex items-center justify-center mb-5
+                            group-hover:bg-brand-primary/20 transition-colors">
+              <Gauge className="h-6 w-6 text-brand-primary" />
+            </div>
+            <h2 className="text-lg font-bold text-white mb-2">Fuel Sensor Calibration</h2>
+            <p className="text-white/40 text-sm leading-relaxed">
+              Generate and export precise sensor calibration tables for linear, cylinder, and tapered fuel tanks.
+            </p>
+            <div className="mt-6 flex items-center gap-1.5 text-brand-primary text-sm font-semibold">
+              Open Calibration Tool
+              <ChevronRight className="h-4 w-4" />
+            </div>
+          </button>
+
+          {/* SIM Manager */}
+          <button
+            onClick={onEnterSimManager}
+            className="bg-brand-card border border-white/10 rounded-2xl p-8 shadow-sm
+                       hover:border-brand-primary/40 hover:shadow-[0_0_24px_rgba(216,41,46,0.08)] hover:-translate-y-0.5
+                       transition-all duration-200 group text-left cursor-pointer"
+          >
+            <div className="w-12 h-12 bg-brand-primary/10 rounded-xl flex items-center justify-center mb-5
+                            group-hover:bg-brand-primary/20 transition-colors">
+              <Smartphone className="h-6 w-6 text-brand-primary" />
+            </div>
+            <h2 className="text-lg font-bold text-white mb-2">SIM Manager</h2>
+            <p className="text-white/40 text-sm leading-relaxed">
+              Track fleet SIM cards, balances, promos, and subscription expirations with load request approvals.
+            </p>
+            <div className="mt-6 flex items-center gap-1.5 text-brand-primary text-sm font-semibold">
+              Open SIM Manager
               <ChevronRight className="h-4 w-4" />
             </div>
           </button>
