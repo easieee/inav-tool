@@ -651,7 +651,7 @@ export default function LoadRequestForm({
 
                       {/* Actions */}
                       <td className="py-4 text-right pr-2">
-                        {req.status === 'Pending' && (
+                        {req.status === 'Pending' && canManageData && (
                           <div className="flex items-center justify-end gap-2">
                             <button
                               type="button"

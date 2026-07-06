@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { ChevronLeft, Database, RefreshCw, Coins, Plus, CheckCircle2, AlertTriangle, Settings, History } from 'lucide-react';
+import { ChevronLeft, Database, Coins, Plus, CheckCircle2, AlertTriangle, Settings, History } from 'lucide-react';
 import { useApp } from '../../context/AppContext.jsx';
 import { loadSimManagerFromSheets, saveSimManagerToSheets, SIM_MANAGER_SPREADSHEET_ID } from '../../lib/simManagerAPI.js';
 import { DEFAULT_SIMS, DEFAULT_PROMOS } from '../../data/simManagerDefaultData.js';
@@ -59,11 +59,12 @@ export default function SimManagerApp({ onGoHome }) {
   }, []);
 
   // ── Sheets load ────────────────────────────────────────────
-  const handleLoadFromSheets = useCallback(async (token) => {
+  const handleLoadFromSheets = useCallback(async () => {
     setSyncing(true);
     setSyncError('');
     try {
-      const data = await loadSimManagerFromSheets(token, SIM_MANAGER_SPREADSHEET_ID);
+      // Always use public GViz read (null token) — no sign-in required.
+      const data = await loadSimManagerFromSheets(null, SIM_MANAGER_SPREADSHEET_ID);
       setSims(data.sims);
       setPromos(data.promos.length > 0 ? data.promos : DEFAULT_PROMOS);
       setLoadRequests(data.loadRequests);
@@ -85,33 +86,20 @@ export default function SimManagerApp({ onGoHome }) {
 
   // ── On mount — load once ───────────────────────────────────
   useEffect(() => {
-    if (user?.accessToken || publicReadMode) {
-      handleLoadFromSheets(user?.accessToken || null);
-    } else {
-      loadLocalFallback();
-      setLoaded(true);
-    }
+    handleLoadFromSheets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentionally once on mount
 
   // ── Force sync (retry) ─────────────────────────────────────
   const handleForceSync = useCallback(async () => {
-    await handleLoadFromSheets(user?.accessToken || null);
-  }, [user, handleLoadFromSheets]);
+    await handleLoadFromSheets();
+  }, [handleLoadFromSheets]);
 
-  // ── Save helper ────────────────────────────────────────────
-  const syncToSheets = useCallback(async (s, p, r, a) => {
-    if (!user?.accessToken || !canManageData) return;
-    setSyncing(true);
-    setSyncError('');
-    try {
-      await saveSimManagerToSheets(user.accessToken, SIM_MANAGER_SPREADSHEET_ID, s, p, r, a);
-    } catch (err) {
-      setSyncError(err.message || String(err));
-    } finally {
-      setSyncing(false);
-    }
-  }, [user, canManageData]);
+  // ── Save helper (read-only mode — writes disabled) ─────────
+  // eslint-disable-next-line no-unused-vars
+  const syncToSheets = useCallback(async (_s, _p, _r, _a) => {
+    // Sheet is read-only via public GViz; writes are disabled.
+  }, []);
 
   // ── Audit log helper ────────────────────────────────────────
   const recordAuditLog = useCallback((type, title, description) => {
@@ -171,8 +159,10 @@ export default function SimManagerApp({ onGoHome }) {
       }
     });
 
-    return { totalSims, warningCount, platformExpiringCount, totalBalance };
-  }, [sims]);
+    const pendingRequestsCount = loadRequests.filter(r => r.status === 'Pending').length;
+
+    return { totalSims, warningCount, platformExpiringCount, totalBalance, pendingRequestsCount };
+  }, [sims, loadRequests]);
 
   // Action: Add / Edit SIM
   const handleSaveSim = (savedSim) => {
@@ -393,12 +383,7 @@ export default function SimManagerApp({ onGoHome }) {
               }
             }}
           />
-          {syncing && (
-            <span className="flex items-center gap-1.5 text-white/40 text-xs font-medium" id="sync-status-indicator">
-              <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
-              <span className="hidden sm:inline">Syncing…</span>
-            </span>
-          )}
+
         </div>
       </header>
       <div className="h-[53px]" />
@@ -428,7 +413,7 @@ export default function SimManagerApp({ onGoHome }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 max-w-5xl mx-auto">
 
             {/* Stat 1: Total SIMs */}
             <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 text-left space-y-1 hover:border-blue-500 transition-colors">
@@ -470,6 +455,17 @@ export default function SimManagerApp({ onGoHome }) {
                   <Coins className="w-3 h-3 shrink-0" />
                   active
                 </span>
+              </div>
+            </div>
+
+            {/* Stat 5: Requesting Load */}
+            <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 text-left space-y-1 hover:border-violet-500 transition-colors">
+              <span className="label block">Requesting Load</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className={`text-2xl font-sans font-bold ${stats.pendingRequestsCount > 0 ? 'text-violet-400' : 'text-white'}`}>
+                  {stats.pendingRequestsCount}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">pending</span>
               </div>
             </div>
 
